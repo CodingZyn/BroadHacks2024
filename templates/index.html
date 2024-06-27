@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Broad Atlas - Home{% endblock %}
+
+{% block content %}
+{% if current_user.is_authenticated %}
+<h2>Welcome, {{ current_user.name }}!</h2>
+<p>An internal company website where users can post about their ongoing research that other users can interact
+    with.</p>
+{% else %}
+<h2>Welcome to Broad Atlas</h2>
+<p>Please <a href="{{ url_for('register') }}">Register</a> or <a href="{{ url_for('login') }}">Login</a> to access the
+    site.</p>
+{% endif %}
+{% endblock %}

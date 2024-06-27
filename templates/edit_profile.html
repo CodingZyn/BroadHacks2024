@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<h2>Edit Profile</h2>
+<form method="post" enctype="multipart/form-data">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" value="{{ user.name }}" required>
+    <label for="job_title">Job Title:</label>
+    <input type="text" id="job_title" name="job_title" value="{{ user.job_title }}" required>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" value="{{ user.email }}" required>
+    <label for="department">Research Department:</label>
+    <input type="text" id="department" name="department" value="{{ user.department }}" required>
+    <label for="profile_picture">Profile Picture (optional):</label>
+    <input type="file" id="profile_picture" name="profile_picture">
+    <button type="submit">Update Profile</button>
+</form>
+{% endblock %}

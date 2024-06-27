@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<h2>Search Results</h2>
+<form method="post">
+    <input type="text" name="query" placeholder="Search by keyword, hashtag, user, department, or file type..."
+        value="{{ query }}">
+    <button type="submit">Search</button>
+</form>
+<div id="resultsContainer">
+    {% if query %}
+    <h3>Results for "{{ query }}"</h3>
+    <h4>Posts:</h4>
+    {% if results %}
+    {% for post in results %}
+    <div class="post">
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.description }}</p>
+        {% if post.filename %}
+        {% set file_size, file_extension, download_count = file_info(post.filename) %}
+        <p><a href="{{ url_for('download_file', filename=post.filename) }}">Download attached file</a> (.{{
+            file_extension }}, {{ (file_size / 1024) | round(2) }} KB, {{ download_count }} downloads)</p>
+        {% endif %}
+        <p><small>Posted by {{ post.user }}</small></p>
+        <p><small>Hashtags: {% for hashtag in post.hashtags %}#{{ hashtag }} {% endfor %}</small></p>
+        <p><small>Likes: {{ post.likes }}</small></p>
+        <h4>Comments:</h4>
+        <ul>
+            {% for comment in comments %}
+            {% if comment.post_id == post.id %}
+            <li><strong>{{ comment.user }}:</strong> {{ comment.text }}</li>
+            {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p>No posts found.</p>
+    {% endif %}
+    <h4>Users:</h4>
+    {% if user_results %}
+    <ul>
+        {% for user in user_results %}
+        <li>{{ user.name }} - {{ user.department }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No users found.</p>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
