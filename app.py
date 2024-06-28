@@ -22,13 +22,13 @@ downloads = {}
 
 if not os.path.exists('posts.tsv'):
     with open('posts.tsv', 'w') as f:
-        f.write('Title\tDescription\tKeywords\tDataset Type\tCollection Period\tOrganism\tGenes\tTissue/Cell Type\tCondition\tTechnique\tInstrument Platform\tSoftware\tUsage Restrictions\tRelated Datasets\tFilename\tUser\tPost ID\tLikes\n')
+        f.write('Title\tDescription\tKeywords\tDataset Type\tCollection Period\tOrganism\tGenes\tTissue/Cell Type\tCondition\tTechnique\tInstrument Platform\tSoftware\tUsage Restrictions\tRelated Datasets\tLink\tFilename\tUser\tPost ID\tLikes\n')
 
 with open('posts.tsv', 'r') as f:
     for i, line in enumerate(f):
         if i == 0:
             continue
-        title, description, keywords, dataset_type, collection_period, organism, genes, tissue_celltype, condition, technique, instrument_platform, software, usage_restrictions, related_datasets, filename, user, post_id, post_likes = line.strip().split('\t')
+        title, description, keywords, dataset_type, collection_period, organism, genes, tissue_celltype, condition, technique, instrument_platform, software, usage_restrictions, related_datasets, link, filename, user, post_id, post_likes = line.strip().split('\t')
         post = {
             'title': title,
             'description': description,
@@ -44,6 +44,7 @@ with open('posts.tsv', 'r') as f:
             'software': software,
             'usage_restrictions': usage_restrictions,
             'related_datasets': related_datasets,
+            'link': link,
             'filename': filename,
             'user': user,
             'id': int(post_id),
@@ -153,6 +154,7 @@ def upload():
         software = request.form['software']
         usage_restrictions = request.form['usage_restrictions']
         related_datasets = request.form['related_datasets']
+        link = request.form['link']
         file = request.files['file']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
@@ -174,6 +176,7 @@ def upload():
             'software': software,
             'usage_restrictions': usage_restrictions,
             'related_datasets': related_datasets,
+            'link': link,
             'filename': filename,
             'user': current_user.name,
             'id': len(posts) + 1,
