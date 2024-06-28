@@ -82,6 +82,7 @@ platformdirs==4.2.2
 plotly==5.22.0
 preshed==3.0.9
 prompt_toolkit==3.0.47
+protobuf==3.19.4
 psutil==6.0.0
 ptyprocess==0.7.0
 pure-eval==0.2.2
