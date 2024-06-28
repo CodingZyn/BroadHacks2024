@@ -17,7 +17,25 @@
     <h4>Comments:</h4>
     <ul>
         {% for comment in comments %}
-        <li><strong>{{ comment.user }}:</strong> {{ comment.text }}</li>
+        <li>
+            <strong>{{ comment.user }}:</strong> {{ comment.text }}
+            <p><small>Likes: {{ comment_likes | selectattr('comment_id', 'equalto', comment.id) | list | length
+                    }}</small></p>
+            {% set liked_comment = false %}
+            {% for like in comment_likes %}
+            {% if like.comment_id == comment.id and like.user == current_user.name %}
+            {% set liked_comment = true %}
+            {% endif %}
+            {% endfor %}
+            {% if not liked_comment %}
+            <form method="post" style="display: inline;">
+                <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                <button type="submit" name="like_comment">Like</button>
+            </form>
+            {% else %}
+            <p><small>You liked this comment.</small></p>
+            {% endif %}
+        </li>
         {% endfor %}
     </ul>
     <form method="post">

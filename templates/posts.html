@@ -14,7 +14,8 @@
         <p><a href="{{ url_for('download_file', filename=post.filename) }}">Download attached file</a> (.{{
             file_extension }}, {{ (file_size / 1024) | round(2) }} KB, {{ download_count }} downloads)</p>
         {% endif %}
-        <p><small>Posted by {{ post.user }}</small></p>
+        <p><small>Posted by <a href="{{ url_for('view_user_profile', user_id=find_user_id(post.user)) }}">{{ post.user
+                    }}</a></small></p>
         <p><small>Keywords: {% for keyword in post.keywords %}#{{ keyword }} {% endfor %}</small></p>
         <p><small>Likes: {{ post.likes }}</small></p>
         {% set liked = false %}
@@ -35,7 +36,25 @@
         <ul>
             {% for comment in comments %}
             {% if comment.post_id == post.id %}
-            <li><strong>{{ comment.user }}:</strong> {{ comment.text }}</li>
+            <li>
+                <strong>{{ comment.user }}:</strong> {{ comment.text }}
+                <p><small>Likes: {{ comment_likes | selectattr('comment_id', 'equalto', comment.id) | list | length
+                        }}</small></p>
+                {% set liked_comment = false %}
+                {% for like in comment_likes %}
+                {% if like.comment_id == comment.id and like.user == current_user.name %}
+                {% set liked_comment = true %}
+                {% endif %}
+                {% endfor %}
+                {% if not liked_comment %}
+                <form method="post" style="display: inline;">
+                    <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                    <button type="submit" name="like_comment">Like</button>
+                </form>
+                {% else %}
+                <p><small>You liked this comment.</small></p>
+                {% endif %}
+            </li>
             {% endif %}
             {% endfor %}
         </ul>
