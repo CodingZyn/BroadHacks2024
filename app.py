@@ -6,6 +6,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, sen
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
+from find_closest_posts import get_closest_posts_plot_html
+
 app = Flask(__name__)
 app.secret_key = random.randbytes(16)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
@@ -270,7 +272,8 @@ def view_post(post_id):
                     comment_likes.append({'comment_id': comment_id, 'user': current_user.name})
         post_comments = [comment for comment in comments if comment['post_id'] == post_id]
         post_likes = [like for like in likes if like['post_id'] == post_id]
-        return render_template('single_post.html', post=post, comments=post_comments, likes=post_likes, comment_likes=comment_likes, file_info=file_info)
+        closest_posts_plot_html = get_closest_posts_plot_html(post)
+        return render_template('single_post.html', post=post, comments=post_comments, likes=post_likes, comment_likes=comment_likes, file_info=file_info, closest_posts_plot_html=closest_posts_plot_html)
     else:
         flash('Post not found.', 'error')
         return redirect(url_for('posts_view'))

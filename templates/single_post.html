@@ -12,6 +12,7 @@
         file_extension }}, {{ (file_size / 1024) | round(2) }} KB, {{ download_count }} downloads)</p>
     {% endif %}
     <p><small>Posted by {{ post.user }}</small></p>
+    <div>{{ closest_posts_plot_html }}</div>
     <p><small>Hashtags: {% for hashtag in post.hashtags %}#{{ hashtag }} {% endfor %}</small></p>
     <p><small>Likes: {{ post.likes }}</small></p>
     <h4>Comments:</h4>
