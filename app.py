@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 import os
+
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
@@ -19,6 +20,7 @@ likes = []
 comment_likes = []
 users = {}
 downloads = {}
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -92,23 +94,75 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+# @app.route('/upload', methods=['GET', 'POST'])
+# @login_required
+# def upload():
+#     if request.method == 'POST':
+#         title = request.form['title']
+#         description = request.form['description']
+#         hashtags = request.form['hashtags'].split()
+#         file = request.files['file']
+#         if file and allowed_file(file.filename):
+#             filename = secure_filename(file.filename)
+#             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+#         else:
+#             filename = None
+#         post = {'title': title, 'description': description, 'hashtags': hashtags, 'filename': filename, 'user': current_user.name, 'id': len(posts) + 1, 'likes': 0}
+#         posts.append(post)
+#         with open('posts.tsv', 'a') as f:
+#             f.write(f"{post['title']}\t{post['description']}\t{' '.join(post['hashtags'])}\t{post['filename']}\t{post['user']}\t{post['id']}\t{post['likes']}\n")
+#         return redirect(url_for('posts_view'))
+#     return render_template('upload.html')
+
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
     if request.method == 'POST':
         title = request.form['title']
         description = request.form['description']
-        hashtags = request.form['hashtags'].split()
+        keywords = request.form['keywords'].split()
+        dataset_type = request.form['dataset_type']
+        collection_period = request.form['collection_period']
+        organism = request.form['organism']
+        genes = request.form['genes']
+        tissue_celltype = request.form['tissue_celltype']
+        condition = request.form['condition']
+        technique = request.form['technique']
+        instrument_platform = request.form['instrument_platform']
+        software = request.form['software']
+        usage_restrictions = request.form['usage_restrictions']
+        related_datasets = request.form['related_datasets']
+        link = request.form['link']
         file = request.files['file']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         else:
             filename = None
-        post = {'title': title, 'description': description, 'hashtags': hashtags, 'filename': filename, 'user': current_user.name, 'id': len(posts) + 1, 'likes': 0}
+        post = {
+            'title': title,
+            'description': description,
+            'keywords': keywords,
+            'dataset_type': dataset_type,
+            'collection_period': collection_period,
+            'organism': organism,
+            'genes': genes,
+            'tissue_celltype': tissue_celltype,
+            'condition': condition,
+            'technique': technique,
+            'instrument_platform': instrument_platform,
+            'software': software,
+            'usage_restrictions': usage_restrictions,
+            'related_datasets': related_datasets,
+            'link': link,
+            'filename': filename,
+            'user': current_user.name,
+            'id': len(posts) + 1,
+            'likes': 0
+        }
         posts.append(post)
         return redirect(url_for('posts_view'))
-    return render_template('upload.html')
+    return render_template('results.html')
 
 @app.route('/posts', methods=['GET', 'POST'])
 @login_required
@@ -279,7 +333,54 @@ def utility_processor():
         return None
     return dict(find_user_id=find_user_id)
 
-if __name__ == '__main__':
+def make_files():
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
+
+    if not os.path.exists('users.tsv'):
+        with open('users.tsv', 'w') as f:
+            f.write('Name\tJob Title\tEmail\tDepartment\tProfile Picture\tBio\tResearch Interests\tWebsite\n')
+
+    if not os.path.exists('posts.tsv'):
+        with open('posts.tsv', 'w') as f:
+            f.write('Title\tDescription\tKeywords\tDataset Type\tCollection Period\tOrganism\tGenes\tTissue/Cell Type\tCondition\tTechnique\tInstrument Platform\tSoftware\tUsage Restrictions\tRelated Datasets\tLink\tFilename\tUser\tPost ID\tLikes\n')
+
+    with open('users.tsv', 'r') as f:
+        for i, line in enumerate(f):
+            if i == 0:
+                continue
+            name, job_title, email, department, profile_picture, bio, research_interests, website = line.split('\t')
+            user = User(str(i), name, job_title, email, department, profile_picture, bio, research_interests, website)
+            users[str(i)] = user
+
+    with open('posts.tsv', 'r') as f:
+        for i, line in enumerate(f):
+            if i == 0:
+                continue
+            title, description, keywords, dataset_type, collection_period, organism, genes, tissue_celltype, condition, technique, instrument_platform, software, usage_restrictions, related_datasets, link, filename, user, post_id, post_likes = line.split('\t')
+            post = {
+                'title': title,
+                'description': description,
+                'keywords': keywords.split(),
+                'dataset_type': dataset_type,
+                'collection_period': collection_period,
+                'organism': organism,
+                'genes': genes,
+                'tissue_celltype': tissue_celltype,
+                'condition': condition,
+                'technique': technique,
+                'instrument_platform': instrument_platform,
+                'software': software,
+                'usage_restrictions': usage_restrictions,
+                'related_datasets': related_datasets,
+                'link': link,
+                'filename': filename,
+                'user': user,
+                'id': int(post_id),
+                'likes': int(post_likes)
+            }
+            posts.append(post)
+
+if __name__ == '__main__':
+    make_files()
     app.run(debug=True, port=5001)

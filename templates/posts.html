@@ -16,7 +16,7 @@
         {% endif %}
         <p><small>Posted by <a href="{{ url_for('view_user_profile', user_id=find_user_id(post.user)) }}">{{ post.user
                     }}</a></small></p>
-        <p><small>Hashtags: {% for hashtag in post.hashtags %}#{{ hashtag }} {% endfor %}</small></p>
+        <p><small>Keywords: {% for keyword in post.keywords %}#{{ keyword }} {% endfor %}</small></p>
         <p><small>Likes: {{ post.likes }}</small></p>
         {% set liked = false %}
         {% for like in likes %}
