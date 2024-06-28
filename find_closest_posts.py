@@ -1,15 +1,13 @@
 import networkx as nx
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import pandas as pd
 from collections import defaultdict
 import textwrap
 from pyvis.network import Network
-import numpy as np
 from sklearn.manifold import TSNE
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import spacy
+import pygraphviz
 
 
 DF = pd.read_csv('posts.tsv', sep='\t')
@@ -108,5 +106,7 @@ def get_closest_posts_plot_html(
             g.add_node(node, size=80, color='lightgreen', font={'size': 100})
     for edge in G.edges():
         g.add_edge(edge[0], edge[1], width=12)
-    html_code = g.get_html()
+    g.show('ex.html')
+    with open('ex.html', 'r') as file:
+        html_code = file.read()
     return html_code
