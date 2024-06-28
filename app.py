@@ -12,10 +12,11 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# In-memory storage for posts, comments, likes, and users (for simplicity)
+# In-memory storage for posts, comments, likes, comment likes, and users (for simplicity)
 posts = []
 comments = []
 likes = []
+comment_likes = []
 users = {}
 downloads = {}
 
@@ -30,13 +31,18 @@ def file_info(filename):
     return file_size, file_extension, download_count
 
 class User(UserMixin):
-    def __init__(self, id, name, job_title, email, department, profile_picture):
+    def __init__(self, id, name, job_title, email, department, profile_picture, bio='', research_interests='', website=''):
         self.id = id
         self.name = name
         self.job_title = job_title
         self.email = email
         self.department = department
         self.profile_picture = profile_picture
+        self.bio = bio
+        self.research_interests = research_interests
+        self.website = website
+        self.followers = []
+        self.following = []
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -53,6 +59,9 @@ def register():
         job_title = request.form['job_title']
         email = request.form['email']
         department = request.form['department']
+        bio = request.form['bio']
+        research_interests = request.form['research_interests']
+        website = request.form['website']
         profile_picture = request.files.get('profile_picture')
         user_id = str(len(users) + 1)
         if profile_picture and allowed_file(profile_picture.filename):
@@ -60,7 +69,7 @@ def register():
             profile_picture.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         else:
             filename = None
-        new_user = User(user_id, name, job_title, email, department, filename)
+        new_user = User(user_id, name, job_title, email, department, filename, bio, research_interests, website)
         users[user_id] = new_user
         flash('Account created successfully. Please log in.', 'success')
         return redirect(url_for('login'))
@@ -108,7 +117,7 @@ def posts_view():
         if 'comment' in request.form:
             post_id = int(request.form['post_id'])
             comment_text = request.form['comment']
-            comment = {'post_id': post_id, 'user': current_user.name, 'text': comment_text}
+            comment = {'post_id': post_id, 'user': current_user.name, 'text': comment_text, 'id': len(comments) + 1}
             comments.append(comment)
         elif 'like' in request.form:
             post_id = int(request.form['post_id'])
@@ -118,14 +127,18 @@ def posts_view():
                     if post['id'] == post_id:
                         post['likes'] += 1
                         break
-    return render_template('posts.html', posts=posts, comments=comments, likes=likes, file_info=file_info)
+        elif 'like_comment' in request.form:
+            comment_id = int(request.form['comment_id'])
+            if not any(like['comment_id'] == comment_id and like['user'] == current_user.name for like in comment_likes):
+                comment_likes.append({'comment_id': comment_id, 'user': current_user.name})
+    return render_template('posts.html', posts=posts, comments=comments, likes=likes, comment_likes=comment_likes, file_info=file_info)
 
 @app.route('/profile')
 @login_required
 def profile():
     user_posts = [post for post in posts if post['user'] == current_user.name]
     liked_posts = [post for post in posts if any(like['post_id'] == post['id'] and like['user'] == current_user.name for like in likes)]
-    return render_template('profile.html', user=current_user, posts=user_posts, liked_posts=liked_posts)
+    return render_template('profile.html', user=current_user, posts=user_posts, liked_posts=liked_posts, users=users)
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
@@ -135,6 +148,9 @@ def edit_profile():
         current_user.job_title = request.form['job_title']
         current_user.email = request.form['email']
         current_user.department = request.form['department']
+        current_user.bio = request.form['bio']
+        current_user.research_interests = request.form['research_interests']
+        current_user.website = request.form['website']
         profile_picture = request.files.get('profile_picture')
         if profile_picture and allowed_file(profile_picture.filename):
             filename = secure_filename(profile_picture.filename)
@@ -150,11 +166,44 @@ def search():
     query = ''
     results = []
     user_results = []
+    sort = 'date'
+    start_date = ''
+    end_date = ''
+    file_type = ''
+    department = ''
+    user = ''
+
     if request.method == 'POST':
-        query = request.form['query']
-        results = [post for post in posts if query in post['title'] or query in post['description'] or query in ' '.join(post['hashtags']) or any(query in comment['text'] and comment['post_id'] == post['id'] for comment in comments) or (post['filename'] and query.lower() == file_info(post['filename'])[1])]
-        user_results = [user for user in users.values() if query.lower() in user.name.lower() or query.lower() in user.department.lower()]
-    return render_template('search.html', query=query, results=results, user_results=user_results, file_info=file_info)
+        query = request.form['query'].lower()  # Convert to lowercase for case-insensitive search
+        sort = request.form['sort']
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        file_type = request.form['file_type']
+        department = request.form['department'].lower()
+        user = request.form['user'].lower()
+
+        results = [post for post in posts if query in post['title'].lower() or query in post['description'].lower() or query in ' '.join(post['hashtags']).lower() or any(query in comment['text'].lower() and comment['post_id'] == post['id'] for comment in comments) or (post['filename'] and query == file_info(post['filename'])[1].lower())]
+        if start_date:
+            results = [post for post in results if post.get('date') and post['date'] >= start_date]
+        if end_date:
+            results = [post for post in results if post.get('date') and post['date'] <= end_date]
+        if file_type:
+            results = [post for post in results if post.get('filename') and post['filename'].endswith(file_type)]
+        if department:
+            results = [post for post in results if post.get('user') and users[find_user_id(post['user'])].department.lower() == department]
+        if user:
+            results = [post for post in results if post.get('user') and user in post['user'].lower()]
+
+        user_results = [user for user in users.values() if query in user.name.lower() or query in user.department.lower()]
+
+        if sort == 'popularity':
+            results.sort(key=lambda x: x['likes'], reverse=True)
+        elif sort == 'comments':
+            results.sort(key=lambda x: len([comment for comment in comments if comment['post_id'] == x['id']]), reverse=True)
+        else:
+            results.sort(key=lambda x: x.get('date', ''), reverse=True)
+
+    return render_template('search.html', query=query, results=results, user_results=user_results, sort=sort, start_date=start_date, end_date=end_date, file_type=file_type, department=department, user=user, file_info=file_info)
 
 @app.route('/download/<filename>')
 @login_required
@@ -162,17 +211,73 @@ def download_file(filename):
     downloads[filename] = downloads.get(filename, 0) + 1
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-@app.route('/post/<int:post_id>')
+@app.route('/post/<int:post_id>', methods=['GET', 'POST'])
 @login_required
 def view_post(post_id):
     post = next((post for post in posts if post['id'] == post_id), None)
     if post:
+        if request.method == 'POST':
+            if 'comment' in request.form:
+                comment_text = request.form['comment']
+                comment = {'post_id': post_id, 'user': current_user.name, 'text': comment_text, 'id': len(comments) + 1}
+                comments.append(comment)
+            elif 'like_comment' in request.form:
+                comment_id = int(request.form['comment_id'])
+                if not any(like['comment_id'] == comment_id and like['user'] == current_user.name for like in comment_likes):
+                    comment_likes.append({'comment_id': comment_id, 'user': current_user.name})
         post_comments = [comment for comment in comments if comment['post_id'] == post_id]
         post_likes = [like for like in likes if like['post_id'] == post_id]
-        return render_template('single_post.html', post=post, comments=post_comments, likes=post_likes, file_info=file_info)
+        return render_template('single_post.html', post=post, comments=post_comments, likes=post_likes, comment_likes=comment_likes, file_info=file_info)
     else:
         flash('Post not found.', 'error')
         return redirect(url_for('posts_view'))
+
+@app.route('/user/<int:user_id>')
+@login_required
+def view_user_profile(user_id):
+    user = users.get(str(user_id))
+    if user:
+        user_posts = [post for post in posts if post['user'] == user.name]
+        liked_posts = [post for post in posts if any(like['post_id'] == post['id'] and like['user'] == user.name for like in likes)]
+        return render_template('view_profile.html', user=user, posts=user_posts, liked_posts=liked_posts, users=users)
+    else:
+        flash('User not found.', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/follow/<int:user_id>')
+@login_required
+def follow_user(user_id):
+    user_to_follow = users.get(str(user_id))
+    if user_to_follow and current_user.id != str(user_id):
+        if str(user_id) not in current_user.following:
+            current_user.following.append(str(user_id))
+            user_to_follow.followers.append(current_user.id)
+        flash(f'You are now following {user_to_follow.name}', 'success')
+    else:
+        flash('User not found or you cannot follow yourself', 'error')
+    return redirect(url_for('view_user_profile', user_id=user_id))
+
+@app.route('/unfollow/<int:user_id>')
+@login_required
+def unfollow_user(user_id):
+    user_to_unfollow = users.get(str(user_id))
+    if user_to_unfollow and current_user.id != str(user_id):
+        if str(user_id) in current_user.following:
+            current_user.following.remove(str(user_id))
+            user_to_unfollow.followers.remove(current_user.id)
+        flash(f'You have unfollowed {user_to_unfollow.name}', 'success')
+    else:
+        flash('User not found or you cannot unfollow yourself', 'error')
+    return redirect(url_for('view_user_profile', user_id=user_id))
+
+@app.context_processor
+def utility_processor():
+    def find_user_id(username):
+        for user_id, user in users.items():
+            if user.name == username:
+                return user_id
+        return None
+    return dict(find_user_id=find_user_id)
 
 if __name__ == '__main__':
     if not os.path.exists('uploads'):
