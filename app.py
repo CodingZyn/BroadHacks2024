@@ -103,26 +103,6 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# @app.route('/upload', methods=['GET', 'POST'])
-# @login_required
-# def upload():
-#     if request.method == 'POST':
-#         title = request.form['title']
-#         description = request.form['description']
-#         hashtags = request.form['hashtags'].split()
-#         file = request.files['file']
-#         if file and allowed_file(file.filename):
-#             filename = secure_filename(file.filename)
-#             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-#         else:
-#             filename = None
-#         post = {'title': title, 'description': description, 'hashtags': hashtags, 'filename': filename, 'user': current_user.name, 'id': len(posts) + 1, 'likes': 0}
-#         posts.append(post)
-#         with open('posts.tsv', 'a') as f:
-#             f.write(f"{post['title']}\t{post['description']}\t{' '.join(post['hashtags'])}\t{post['filename']}\t{post['user']}\t{post['id']}\t{post['likes']}\n")
-#         return redirect(url_for('posts_view'))
-#     return render_template('upload.html')
-
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
