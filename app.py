@@ -80,6 +80,8 @@ def register():
         new_user = User(user_id, name, job_title, email, department, filename, bio, research_interests, website)
         users[user_id] = new_user
         flash('Account created successfully. Please log in.', 'success')
+        with open('users.tsv', 'a') as f:
+            f.write(f"{name}\t{job_title}\t{email}\t{department}\t{filename}\t{bio}\t{research_interests}\t{website}\n")
         return redirect(url_for('login'))
     return render_template('register.html')
 
