@@ -236,7 +236,7 @@ def search():
         department = request.form['department'].lower()
         user = request.form['user'].lower()
 
-        results = [post for post in posts if query in post['title'].lower() or query in post['description'].lower() or query in ' '.join(post['hashtags']).lower() or any(query in comment['text'].lower() and comment['post_id'] == post['id'] for comment in comments) or (post['filename'] and query == file_info(post['filename'])[1].lower())]
+        results = [post for post in posts if query in post['title'].lower() or query in post['description'].lower() or query in ' '.join(post['keywords']).lower() or any(query in comment['text'].lower() and comment['post_id'] == post['id'] for comment in comments) or (post['filename'] and query == file_info(post['filename'])[1].lower())]
         if start_date:
             results = [post for post in results if post.get('date') and post['date'] >= start_date]
         if end_date:
