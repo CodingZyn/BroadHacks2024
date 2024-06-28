@@ -272,7 +272,7 @@ def view_post(post_id):
                     comment_likes.append({'comment_id': comment_id, 'user': current_user.name})
         post_comments = [comment for comment in comments if comment['post_id'] == post_id]
         post_likes = [like for like in likes if like['post_id'] == post_id]
-        closest_posts_plot_html = get_closest_posts_plot_html(post)
+        closest_posts_plot_html = get_closest_posts_plot_html(post['title'])
         return render_template('single_post.html', post=post, comments=post_comments, likes=post_likes, comment_likes=comment_likes, file_info=file_info, closest_posts_plot_html=closest_posts_plot_html)
     else:
         flash('Post not found.', 'error')

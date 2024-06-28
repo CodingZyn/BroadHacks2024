@@ -2,24 +2,17 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import pyvis
-import networkx as nx
-import matplotlib.pyplot as plt
 import pandas as pd
 from collections import defaultdict
-from ast import literal_eval
 import textwrap
-import graphviz
-import pygraphviz
 from pyvis.network import Network
 import numpy as np
 from sklearn.manifold import TSNE
-import plotly.express as px
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import spacy
 
 
-DF = pd.read_csv('posts.tsv')
+DF = pd.read_csv('posts.tsv', sep='\t')
 NODE_COLOR = {'keyword': 'lightgreen', 'title': 'skyblue'}
 
 
@@ -27,7 +20,7 @@ NODE_COLOR = {'keyword': 'lightgreen', 'title': 'skyblue'}
 nlp = spacy.load('en_core_web_sm')
 words = []
 for i, row in DF.iterrows():
-    words.append(row["Keywords"])
+    words.append(row["Keywords"].split(" "))
 
 documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(words)]
 model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
@@ -49,18 +42,11 @@ def get_closest_df(
     distances = np.linalg.norm(X_embedded - x, axis=1)
     closest = distances.argsort()[1:n_closest]
 
-    # plot the n_closest on t-SNE
-    fig = px.scatter(x=X_embedded[:,0], y=X_embedded[:,1], hover_name=DF['Title'],
-                     color=np.where(np.any(np.arange(len(words)) == closest.reshape(-1, 1), axis=0), f'{n_closest} closest', 'others'))
-    fig.update_traces(textposition='top center')
-    fig.update_layout(title='t-SNE of the embeddings of the descriptions')
-    fig.show()
-
     return DF.iloc[closest]
 
 
 def get_closest_posts_plot_html(
-    post: dict,
+    post_title: str,
 ) -> str:
     """
     post = {
@@ -87,7 +73,7 @@ def get_closest_posts_plot_html(
     """
     G = nx.Graph()
     attributes = defaultdict(list)
-    closest_df = get_closest_df(post)
+    closest_df = get_closest_df(post_title)
     for index, row in closest_df.iterrows():
         title = row['Title']
         keywords = str(row['Keywords']).split(" ")
