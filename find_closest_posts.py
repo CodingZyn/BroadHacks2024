@@ -9,7 +9,7 @@ from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import spacy
 import pygraphviz
 from bs4 import BeautifulSoup
-
+import re
 
 DF = pd.read_csv('posts.tsv', sep='\t')
 NODE_COLOR = {'keyword': 'lightgreen', 'title': 'skyblue'}
@@ -79,7 +79,6 @@ def get_closest_posts_plot_html(
         for keyword in keywords:
             attributes[keyword].append(title)
     attributes = {key: list(set(value)) for key, value in attributes.items()}
-    attributes = {key: value for key, value in attributes.items() if len(value) >= 2}
     for keyword in attributes.keys():
         G.add_node(keyword, type='keyword')
     for title in set(element for sublist in attributes.values() for element in sublist):
@@ -110,6 +109,15 @@ def get_closest_posts_plot_html(
     g.show('ex.html')
     with open('ex.html', 'r') as file:
         html_code = file.read()
+        regex_pattern = r"(#mynetwork\s*{\s*width:\s*)\d+(;\s*height:\s*)\d+(;\s*)"
+        replacement_string = r"\1height: 50vh;\n    background-color: #ffffff;\n    border: 1px solid lightgray;\n    position: relative;\n    float: left;\n}"
+        html_code = re.sub(regex_pattern, replacement_string, html_code)
+        regex_pattern = r'(<div\s+class="card"\s+style="width:\s*100%\s*(?:;">)?)'
+        replacement_string = r'\1 height: 45vh;'
+        html_code = re.sub(regex_pattern, replacement_string, html_code)
+        # Apply regex substitution to modify the CSS block
+        
         soup = BeautifulSoup(html_code, 'html.parser')
         html_code = soup.find("head").prettify() + soup.find("body").prettify()
+
     return html_code

@@ -123,7 +123,7 @@ def upload():
         software = request.form['software']
         usage_restrictions = request.form['usage_restrictions']
         related_datasets = request.form['related_datasets']
-        link = request.form['link']
+        link = ""
         file = request.files['file']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
