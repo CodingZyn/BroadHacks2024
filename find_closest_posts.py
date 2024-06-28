@@ -8,6 +8,7 @@ from sklearn.manifold import TSNE
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import spacy
 import pygraphviz
+from bs4 import BeautifulSoup
 
 
 DF = pd.read_csv('posts.tsv', sep='\t')
@@ -109,4 +110,6 @@ def get_closest_posts_plot_html(
     g.show('ex.html')
     with open('ex.html', 'r') as file:
         html_code = file.read()
+        soup = BeautifulSoup(html_code, 'html.parser')
+        html_code = soup.find("head").prettify() + soup.find("body").prettify()
     return html_code
