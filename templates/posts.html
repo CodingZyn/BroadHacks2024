@@ -7,7 +7,7 @@
 <div id="postsContainer">
     {% for post in posts %}
     <div class="post">
-        <h3>{{ post.title }}</h3>
+        <h3><a href="{{ url_for('view_post', post_id=post.id) }}">{{ post.title }}</a></h3>
         <p>{{ post.description }}</p>
         {% if post.filename %}
         {% set file_size, file_extension, download_count = file_info(post.filename) %}
