@@ -15,7 +15,7 @@
             file_extension }}, {{ (file_size / 1024) | round(2) }} KB, {{ download_count }} downloads)</p>
         {% endif %}
         <p><small>Posted by {{ post.user }}</small></p>
-        <p><small>Hashtags: {% for hashtag in post.hashtags %}#{{ hashtag }} {% endfor %}</small></p>
+        <p><small>Keywords: {% for keyword in post.keywords %}#{{ keyword }} {% endfor %}</small></p>
         <p><small>Likes: {{ post.likes }}</small></p>
         {% set liked = false %}
         {% for like in likes %}
