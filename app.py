@@ -162,26 +162,19 @@ def download_file(filename):
     downloads[filename] = downloads.get(filename, 0) + 1
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.route('/post/<int:post_id>')
+@login_required
+def view_post(post_id):
+    post = next((post for post in posts if post['id'] == post_id), None)
+    if post:
+        post_comments = [comment for comment in comments if comment['post_id'] == post_id]
+        post_likes = [like for like in likes if like['post_id'] == post_id]
+        return render_template('single_post.html', post=post, comments=post_comments, likes=post_likes, file_info=file_info)
+    else:
+        flash('Post not found.', 'error')
+        return redirect(url_for('posts_view'))
+
 if __name__ == '__main__':
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
     app.run(debug=True, port=5001)
-
-
-
-#In PowerShell, run the following: 
-# cd "C:\Users\ngoble\Documents\Python Scripts\BroadHackathon"
-# .\.venv\Scripts\Activate.ps1
-# python app.py
-#Navigate to http://127.0.0.1:5001 to see your website in action.
-
-#OR, in cmd run the following: # Navigate to the project directory
-# cd "C:\Users\ngoble\Documents\Python Scripts\BroadHackathon"
-
-# Activate the virtual environment
-# .\.venv\Scripts\activate
-
-# Run the Flask application
-# python app.py
-
-#Go to http://127.0.0.1:5001 in browser

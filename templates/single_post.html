@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Post - {{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="post">
+    <h2>{{ post.title }}</h2>
+    <p>{{ post.description }}</p>
+    {% if post.filename %}
+    {% set file_size, file_extension, download_count = file_info(post.filename) %}
+    <p><a href="{{ url_for('download_file', filename=post.filename) }}">Download attached file</a> (.{{
+        file_extension }}, {{ (file_size / 1024) | round(2) }} KB, {{ download_count }} downloads)</p>
+    {% endif %}
+    <p><small>Posted by {{ post.user }}</small></p>
+    <p><small>Hashtags: {% for hashtag in post.hashtags %}#{{ hashtag }} {% endfor %}</small></p>
+    <p><small>Likes: {{ post.likes }}</small></p>
+    <h4>Comments:</h4>
+    <ul>
+        {% for comment in comments %}
+        <li><strong>{{ comment.user }}:</strong> {{ comment.text }}</li>
+        {% endfor %}
+    </ul>
+    <form method="post">
+        <input type="hidden" name="post_id" value="{{ post.id }}">
+        <textarea name="comment" placeholder="Add a comment" required></textarea>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+{% endblock %}
