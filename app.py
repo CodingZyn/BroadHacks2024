@@ -21,37 +21,6 @@ comment_likes = []
 users = {}
 downloads = {}
 
-if not os.path.exists('posts.tsv'):
-    with open('posts.tsv', 'w') as f:
-        f.write('Title\tDescription\tKeywords\tDataset Type\tCollection Period\tOrganism\tGenes\tTissue/Cell Type\tCondition\tTechnique\tInstrument Platform\tSoftware\tUsage Restrictions\tRelated Datasets\tLink\tFilename\tUser\tPost ID\tLikes\n')
-
-with open('posts.tsv', 'r') as f:
-    for i, line in enumerate(f):
-        if i == 0:
-            continue
-        title, description, keywords, dataset_type, collection_period, organism, genes, tissue_celltype, condition, technique, instrument_platform, software, usage_restrictions, related_datasets, link, filename, user, post_id, post_likes = line.strip().split('\t')
-        post = {
-            'title': title,
-            'description': description,
-            'keywords': keywords.split(),
-            'dataset_type': dataset_type,
-            'collection_period': collection_period,
-            'organism': organism,
-            'genes': genes,
-            'tissue_celltype': tissue_celltype,
-            'condition': condition,
-            'technique': technique,
-            'instrument_platform': instrument_platform,
-            'software': software,
-            'usage_restrictions': usage_restrictions,
-            'related_datasets': related_datasets,
-            'link': link,
-            'filename': filename,
-            'user': user,
-            'id': int(post_id),
-            'likes': int(post_likes)
-        }
-        posts.append(post)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -364,7 +333,54 @@ def utility_processor():
         return None
     return dict(find_user_id=find_user_id)
 
-if __name__ == '__main__':
+def make_files():
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
+
+    if not os.path.exists('users.tsv'):
+        with open('users.tsv', 'w') as f:
+            f.write('Name\tJob Title\tEmail\tDepartment\tProfile Picture\tBio\tResearch Interests\tWebsite\n')
+
+    if not os.path.exists('posts.tsv'):
+        with open('posts.tsv', 'w') as f:
+            f.write('Title\tDescription\tKeywords\tDataset Type\tCollection Period\tOrganism\tGenes\tTissue/Cell Type\tCondition\tTechnique\tInstrument Platform\tSoftware\tUsage Restrictions\tRelated Datasets\tLink\tFilename\tUser\tPost ID\tLikes\n')
+
+    with open('users.tsv', 'r') as f:
+        for i, line in enumerate(f):
+            if i == 0:
+                continue
+            name, job_title, email, department, profile_picture, bio, research_interests, website = line.split('\t')
+            user = User(str(i), name, job_title, email, department, profile_picture, bio, research_interests, website)
+            users[str(i)] = user
+
+    with open('posts.tsv', 'r') as f:
+        for i, line in enumerate(f):
+            if i == 0:
+                continue
+            title, description, keywords, dataset_type, collection_period, organism, genes, tissue_celltype, condition, technique, instrument_platform, software, usage_restrictions, related_datasets, link, filename, user, post_id, post_likes = line.split('\t')
+            post = {
+                'title': title,
+                'description': description,
+                'keywords': keywords.split(),
+                'dataset_type': dataset_type,
+                'collection_period': collection_period,
+                'organism': organism,
+                'genes': genes,
+                'tissue_celltype': tissue_celltype,
+                'condition': condition,
+                'technique': technique,
+                'instrument_platform': instrument_platform,
+                'software': software,
+                'usage_restrictions': usage_restrictions,
+                'related_datasets': related_datasets,
+                'link': link,
+                'filename': filename,
+                'user': user,
+                'id': int(post_id),
+                'likes': int(post_likes)
+            }
+            posts.append(post)
+
+if __name__ == '__main__':
+    make_files()
     app.run(debug=True, port=5001)
