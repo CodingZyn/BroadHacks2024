@@ -1,6 +1,6 @@
 import os
 import logging
-import random
+import secrets
 
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 from werkzeug.utils import secure_filename
@@ -9,7 +9,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from find_closest_posts import get_closest_posts_plot_html
 
 app = Flask(__name__)
-app.secret_key = random.randbytes(16)
+app.secret_key = secrets.token_bytes(16)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 app.config['ALLOWED_EXTENSIONS'] = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'edf', 'zip', 'csv', 'fasta', 'hdf5', 'gct', 'tsv', 'h5ad', 'feather', 'parquet', 'vcf', 'bam', 'sam', 'crm', 'tiff', 'xlsx', 'bed'}
 
@@ -375,4 +375,4 @@ def make_files():
 
 if __name__ == '__main__':
     make_files()
-    app.run(debug=True, port=5001)
+    app.run(host='0.0.0.0', debug=True, port=5001)
