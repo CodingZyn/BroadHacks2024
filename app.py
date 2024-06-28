@@ -1,13 +1,19 @@
 import os
+import logging
+import random
 
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'
+app.secret_key = random.randbytes(16)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 app.config['ALLOWED_EXTENSIONS'] = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'edf', 'zip', 'csv', 'fasta', 'hdf5', 'gct', 'tsv', 'h5ad', 'feather', 'parquet', 'vcf', 'bam', 'sam', 'crm', 'tiff', 'xlsx', 'bed'}
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -79,6 +85,7 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    logger.info("Log in request")
     if request.method == 'POST':
         email = request.form['email']
         for user_id, user in users.items():
